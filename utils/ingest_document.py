@@ -23,6 +23,13 @@ def insert_document(conn, json_data):
         docket = create_dummy_docket(attributes)
         insert_docket(conn, docket)
 
+    attachments_links = (
+        data["data"]
+        .get("relationships", {})
+        .get("attachments", {})
+        .get("links", {})
+    )
+
     # Prepare the values for insertion
     values = (
         document_id,
@@ -67,6 +74,11 @@ def insert_document(conn, json_data):
         attributes.get("topics"),
         attributes.get("withdrawn"),
         attributes.get("zip"),
+        attributes.get("frDocNum"),
+        attachments_links.get("self"),
+        attachments_links.get("related"),
+        json.dumps(attributes.get("fileFormats")) if attributes.get("fileFormats") is not None else None,
+        json.dumps(attributes.get("displayProperties")) if attributes.get("displayProperties") is not None else None,
     )
 
     # Insert into the database
@@ -83,8 +95,10 @@ def insert_document(conn, json_data):
                 submitter_org, phone, posted_date, postmark_date, reason_withdrawn,
                 receive_date, reg_writer_instruction, restriction_reason,
                 restriction_reason_type, state_province_region, subtype,
-                document_title, topics, is_withdrawn, postal_code
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                document_title, topics, is_withdrawn, postal_code,
+                frdocnum, attachments_self_link, attachments_related_link,
+                file_formats, display_properties
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (document_id) DO UPDATE
             SET
                 document_api_link = EXCLUDED.document_api_link,
@@ -127,7 +141,12 @@ def insert_document(conn, json_data):
                 document_title = EXCLUDED.document_title,
                 topics = EXCLUDED.topics,
                 is_withdrawn = EXCLUDED.is_withdrawn,
-                postal_code = EXCLUDED.postal_code;
+                postal_code = EXCLUDED.postal_code,
+                frdocnum = EXCLUDED.frdocnum,
+                attachments_self_link = EXCLUDED.attachments_self_link,
+                attachments_related_link = EXCLUDED.attachments_related_link,
+                file_formats = EXCLUDED.file_formats,
+                display_properties = EXCLUDED.display_properties;
             """
             cursor.execute(insert_query, values)
             print(f"Document {document_id} inserted successfully.")
