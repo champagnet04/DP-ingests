@@ -1,5 +1,6 @@
 from .utils.opensearch import connect as connect_opensearch
 from .utils.sql import connect as connect_sql
+from .utils.ingest_cfr_part import insert_cfr_part
 from .utils.ingest_comment import insert_comment
 from .utils.ingest_docket import insert_docket
 from .utils.ingest_document import insert_document
@@ -36,6 +37,12 @@ def ingest_federal_document(contents):
     insert_federal_document(sql, contents)
     sql.commit()                                                                                                              
     sql.close() 
+
+def ingest_cfr_part(contents):
+    sql = connect_sql()
+    insert_cfr_part(sql, contents)
+    sql.commit()
+    sql.close()
 
 def ingest_docket(contents):
     sql = connect_sql()
